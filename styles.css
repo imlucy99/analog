@@ -1,0 +1,268 @@
+/* =========================================================
+   JGVRP Speedometer HUD - styles
+   Ukuran & posisi: ubah variabel di :root.
+   ========================================================= */
+:root {
+    --scale: 0.3;                                   /* 1 = 1600px lebar. Perbesar / perkecil seluruh klaster */
+    --hud-width: calc(1600px * var(--scale));       /* lebar klaster (tinggi mengikuti rasio 1600:700) */
+    --offset-bottom: 50px;                          /* jarak HUD dari bawah layar */
+    --offset-right: 18px;                           /* jarak HUD dari kanan layar */
+    --logo-size: 70%;                               /* ukuran logo intro (relatif terhadap cakram intro) */
+
+    --warn: #ff2a2f;
+    --green: #22d65a;
+    --blue: #2f8bff;
+    --yellow: #ffc21a;
+    --amber: #ffa31a;
+    --text: #f2f3f5;
+    --muted: #8a8f99;
+
+    --digital: 'Orbitron', 'Bahnschrift', 'Eurostile', 'Arial Narrow', sans-serif;
+    --ui: 'Rajdhani', 'Bahnschrift', 'Segoe UI', 'Arial Narrow', sans-serif;
+
+    /* warna muka dial & jarum (jarum bisa diganti lewat tema) */
+    --face-a: #f4f0e8;
+    --face-b: #d2ccbe;
+    --ink: #111214;
+    --zone: #c4161c;
+    --needle: #e3151c;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--ui);
+    color: var(--text);
+    user-select: none;
+}
+
+/* Posisi HUD: kanan bawah layar */
+.hud-wrap {
+    position: fixed;
+    right: var(--offset-right);
+    bottom: var(--offset-bottom);
+    width: var(--hud-width);
+    height: calc(var(--hud-width) * 0.4375);        /* 700 / 1600 */
+    font-size: calc(var(--hud-width) / 100);        /* 1em = 1% lebar klaster (dipakai intro) */
+}
+
+/* Mode preview di browser (demo): klaster di tengah layar, mengikuti lebar jendela */
+body.preview {
+    --hud-width: min(94vw, 1400px);
+    background:
+        radial-gradient(ellipse at 50% 120%, #2a2f38 0%, transparent 60%),
+        linear-gradient(180deg, #4b5563 0%, #1f242c 55%, #0d0f13 100%);
+}
+body.preview .hud-wrap {
+    right: 50%;
+    bottom: 50%;
+    transform: translate(50%, 50%);
+}
+
+/* ===================== CLUSTER ===================== */
+.cluster { position: relative; width: 100%; height: 100%; }
+
+.dial {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+}
+
+/* ----- Skala, angka & label (semua ukuran dalam satuan viewBox) ----- */
+.dial .tk { stroke: var(--ink); fill: none; }
+.dial .zone { fill: var(--zone); }
+.dial .num {
+    font-family: var(--ui);
+    font-style: italic;
+    font-weight: 700;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+.dial .num-speed { font-size: 36px; }
+.dial .num-rpm   { font-size: 31px; }
+.dial .num-side  { font-size: 25px; }
+.dial .lbl {
+    font-family: var(--ui);
+    font-style: italic;
+    font-weight: 700;
+    fill: var(--ink);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+.dial .lbl-lg { font-size: 30px; }
+.dial .lbl-md { font-size: 24px; }
+.dial .lbl-sm { font-size: 17px; font-weight: 600; }
+.dial .sep    { fill: none; stroke: rgba(0, 0, 0, 0.14); stroke-width: 2; }
+.dial .sep-hi { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.5; }
+
+/* ----- Jarum (diputar lewat atribut transform oleh JS; sudah di-smooth per frame, tanpa CSS transition) ----- */
+.dial .ndl-body   { fill: var(--needle); }
+.dial .ndl-shadow { fill: rgba(0, 0, 0, 0.22); }
+.dial .ndl-tail   { fill: #0b0b0c; }
+
+/* ----- Odometer ----- */
+.dial .odo-box  { fill: #0d0e10; stroke: #3b3d42; stroke-width: 2.5; }
+.dial .odo-sep  { stroke: rgba(255, 255, 255, 0.18); stroke-width: 1.5; }
+.dial .odo-dig  {
+    font-family: var(--digital);
+    font-weight: 700;
+    font-size: 27px;
+    fill: #f5f5f5;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+/* ----- Ikon bahan bakar & peringatan pada label ----- */
+.dial .fuel-icon { color: var(--ink); }
+.cluster.fuel-low .fuel-icon { color: var(--zone); }
+.cluster.oil-warn .oil-label { fill: #b86a00; }
+.cluster.oil-crit .oil-label { fill: var(--zone); }
+
+/* ===================== LAMPU INDIKATOR ===================== */
+.dial .pod    { fill: #0c0d0f; stroke: #54575d; stroke-width: 2.5; }
+.dial .pod-in { fill: url(#podGrad); }
+
+.lamp {
+    color: rgba(205, 210, 220, 0.24);               /* mati = redup */
+    transition: color 0.15s ease, filter 0.15s ease;
+}
+.lamp.active      { color: var(--green); filter: drop-shadow(0 0 6px rgba(34, 214, 90, 0.6)); }
+.lamp.high-beam   { color: var(--blue);  filter: drop-shadow(0 0 7px rgba(47, 139, 255, 0.75)); }
+.lamp.warn        { color: var(--warn);  filter: drop-shadow(0 0 6px rgba(255, 42, 47, 0.6)); }
+.lamp.locked      { color: var(--yellow); filter: drop-shadow(0 0 6px rgba(255, 194, 26, 0.6)); }
+.lamp.engine-warn { color: var(--amber); filter: drop-shadow(0 0 7px rgba(255, 163, 26, 0.7)); }
+
+/* Satu ikon lampu: garis miring (low) atau lurus (high) */
+#headlight .beam-high { display: none; }
+#headlight.high-beam .beam-high { display: inline; }
+#headlight.high-beam .beam-low { display: none; }
+
+/* Gembok: tertutup saat terkunci, terbuka saat tidak */
+#door-lock .shackle-closed { display: none; }
+#door-lock.locked .shackle-closed { display: inline; }
+#door-lock.locked .shackle-open { display: none; }
+
+/* Boot: semua lampu menyala sebentar seperti mobil asli saat kunci kontak ON */
+.cluster.booting .lamp { color: rgba(255, 255, 255, 0.6); }
+
+/* ===================== INTRO (cakram di tengah speedometer) ===================== */
+.intro {
+    position: absolute;
+    left: 43.125%;                                  /* (810 - 120) / 1600 */
+    top: 30.714%;                                   /* (335 - 120) / 700 */
+    width: 15%;                                     /* 240 / 1600 */
+    height: 34.286%;                                /* 240 / 700 -> lingkaran */
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #1a1d22 0%, #050607 75%);
+    box-shadow: 0 0 0 0.25em rgba(255, 255, 255, 0.12);
+    opacity: 0;
+    pointer-events: none;
+}
+.intro-text {
+    display: flex;
+    gap: 0.25em;
+    font-family: var(--digital);
+    font-weight: 900;
+    font-style: italic;
+    font-size: 2.7em;
+    line-height: 1;
+    color: #fff;
+    transform: skewX(-6deg);
+}
+.intro-text span { opacity: 0; display: inline-block; }
+.intro-line {
+    display: block;
+    height: 0.18em;
+    width: 0;
+    background: var(--needle);
+    box-shadow: 0 0 0.6em var(--needle);
+}
+
+.cluster.intro-on .intro { animation: introFade 2.7s ease both; }
+.cluster.intro-on .intro-text span { animation: slamIn 0.45s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+.cluster.intro-on .intro-line { animation: lineGrow 0.6s 1.0s ease-out forwards; }
+.cluster.intro-on .dial { animation: dialIn 0.6s ease both; }
+
+@keyframes dialIn    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes introFade { 0% { opacity: 0; } 8% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes lineGrow  { to { width: 8em; } }
+@keyframes slamIn {
+    0%   { opacity: 0; transform: translateX(-4em) skewX(-25deg); filter: blur(0.4em); }
+    70%  { opacity: 1; filter: blur(0); }
+    100% { opacity: 1; transform: none; filter: none; text-shadow: 0 0 0.8em rgba(255, 255, 255, 0.5); }
+}
+
+/* ----- Logo kustom (logo.png): cakram ikut memudar lewat introFade, logo muncul dengan zoom halus ----- */
+.intro-logo {
+    display: none;
+    width: var(--logo-size);
+    height: var(--logo-size);
+    object-fit: contain;
+    filter: invert(1) contrast(1.6);                /* logo hitam -> putih */
+    mix-blend-mode: screen;
+}
+.intro.has-logo .intro-logo { display: block; }
+.intro.has-logo .intro-text,
+.intro.has-logo .intro-line { display: none; }
+.cluster.intro-on .intro.has-logo .intro-logo { animation: logoIn 1.1s ease-out both; }
+@keyframes logoIn {
+    0%   { opacity: 0; transform: scale(0.82); filter: invert(1) contrast(1.6) blur(6px); }
+    100% { opacity: 1; transform: none;        filter: invert(1) contrast(1.6) blur(0); }
+}
+
+/* ===================== TEMA JARUM (klik tombol / tekan T) ===================== */
+:root, body[data-theme="lfa"] { --needle: #e3151c; --zone: #c4161c; }
+body[data-theme="night"]      { --needle: #ff6a1f; --zone: #c4161c; }
+body[data-theme="ice"]        { --needle: #17b8ff; --zone: #c4161c; }
+body[data-theme="amber"]      { --needle: #ffb020; --zone: #c4161c; }
+body[data-theme="mono"]       { --needle: #22d65a; --zone: #c4161c; }
+
+.theme-btn {
+    position: fixed; top: 8px; right: 8px; z-index: 10;
+    display: none; align-items: center; gap: 6px;
+    padding: 4px 9px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(10, 11, 13, 0.55); color: rgba(255, 255, 255, 0.75);
+    font: 700 10px/1 var(--ui); letter-spacing: 1.5px; text-transform: uppercase;
+    opacity: 0.7; transition: opacity 0.2s, border-color 0.2s, transform 0.1s;
+}
+body.preview .theme-btn, body.show-btn .theme-btn { display: flex; }
+.theme-btn i { width: 8px; height: 8px; border-radius: 50%; background: var(--needle); box-shadow: 0 0 6px var(--needle); }
+.theme-btn:hover { opacity: 1; border-color: var(--needle); }
+.theme-btn:active { transform: scale(0.95); }
+
+/* Fade warna jarum saat ganti tema */
+@property --needle { syntax: '<color>'; inherits: true; initial-value: #e3151c; }
+body { transition: --needle 0.7s ease; }
+
+/* ===================== PANEL PENGUJIAN (hanya di preview browser) ===================== */
+.test-panel {
+    position: fixed; left: 8px; top: 8px; z-index: 10;
+    display: none; flex-wrap: wrap; gap: 4px; max-width: 360px;
+    padding: 6px; border-radius: 8px;
+    background: rgba(10, 11, 13, 0.7); border: 1px solid rgba(255, 255, 255, 0.15);
+    font: 600 11px/1.2 var(--ui); color: #e8eaee;
+}
+body.preview .test-panel { display: flex; }
+.test-panel button {
+    padding: 4px 8px; border-radius: 6px; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.06);
+    color: inherit; font: inherit;
+}
+.test-panel button:hover { border-color: var(--needle); }
+.test-panel button.on { background: var(--needle); border-color: var(--needle); color: #fff; }
+.test-panel .readout { flex-basis: 100%; font: 600 11px/1.3 monospace; color: #b9bec8; white-space: pre; }
