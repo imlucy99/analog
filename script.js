@@ -23,12 +23,12 @@
 const DEFAULTS = {
     // ----- Tachometer (satuan: RPM mentah; 8000 = angka "8" pada dial x1000)
     rpmMin: 0,
-    rpmMax: 9000,                 // ujung skala dial
+    rpmMax: 8000,                 // ujung skala dial (angka 8 = 8000 RPM)
     rpmAngleStart: 140,           // sudut jarum di RPM minimum (derajat SVG: 0 = kanan, searah jarum jam)
     rpmAngleEnd: 400,             // sudut jarum di RPM maksimum
     revLimit: 8000,               // RPM saat setRPM(1.0) = batas putaran (rev limiter)
     redlineStart: 6500,           // awal zona merah pada dial (hanya tampilan, TIDAK memicu getaran)
-    redlineEnd: 8300,             // akhir zona merah pada dial
+    redlineEnd: 8000,             // akhir zona merah pada dial
     needleResponse: 18,           // kecepatan jarum mengejar RPM (1/detik; makin besar makin cepat)
     needleSmoothing: 0.3,         // 0 = naik & turun sama cepat, 1 = turun separuh lebih lambat (kesan inersia jarum)
     needleMaxSpeed: 900,          // batas kecepatan sapuan jarum RPM & speed (derajat/detik; 0 = tanpa batas)
@@ -56,8 +56,8 @@ const DEFAULTS = {
     fuelResponse: 3,
 
     // ----- Oil press (diturunkan dari setHealth)
-    oilMaxPsi: 80,                // ujung skala PSI
-    oilPsiAtFullHealth: 60,       // PSI yang ditunjuk saat health 100% (health 50% -> 30 PSI)
+    oilMaxPsi: 100,               // ujung skala gauge bawah (0 - 100)
+    oilPsiAtFullHealth: 100,      // nilai yang ditunjuk saat health 100% (health 50% -> 50)
     oilAngleStart: 195,
     oilAngleEnd: 345,
     oilResponse: 5,
@@ -314,7 +314,7 @@ const state = {
     headlights: 0,
     locked: false,
 };
-let bootUntil = performance.now() + 1700;
+let bootUntil = 0;                                   // tanpa sapuan boot / intro
 const BOOT_MS = 1700;
 
 const lim = { active: false, hold: 0, rel: 0, env: 0 };      // status limiter (detektor + envelope getaran)
@@ -555,6 +555,7 @@ api.setOdometer = function (distance) {
 api.setEngine = function (on) {
     state.engine = isTrueValue(on);
     if (state.engine) state.engineSeenOn = true;
+    elHudToggle('engine-on', state.engine);          // mesin hidup = dial & jarum terang, mati = gelap
     kick();
 };
 
@@ -586,34 +587,8 @@ api.setConfig = function (cfg) {
 };
 api.setTemp = (c) => { const v = finite(c); if (v !== null) setText($('temp-val'), Math.round(v)); };
 
-// ----- Intro (bisa dipanggil ulang: playIntro()) -----
-let introTimer;
-api.playIntro = function () {
-    elHud.classList.remove('intro-on');
-    void elHud.offsetWidth;                      // restart animasi CSS
-    elHud.classList.add('intro-on');
-    elHud.classList.add('booting');
-    bootUntil = performance.now() + BOOT_MS;     // semua jarum ikut menyapu
-    kick();
-    clearTimeout(introTimer);
-    introTimer = setTimeout(() => elHud.classList.remove('intro-on'), 2750);
-};
-
-// Teks intro: ganti di index.html pada data-text="OBEY" (huruf & ukuran diatur otomatis)
-(function () {
-    const el = $('intro-text');
-    if (el === NOOP_EL) return;
-    const text = (el.dataset.text || el.textContent || 'OBEY').trim().toUpperCase();
-    const chars = Array.from(text);
-    el.textContent = '';
-    chars.forEach((ch, i) => {
-        const span = document.createElement('span');
-        span.textContent = ch === ' ' ? ' ' : ch;
-        span.style.animationDelay = (0.3 + i * 0.09).toFixed(2) + 's';
-        el.appendChild(span);
-    });
-    el.style.fontSize = Math.max(1.2, Math.min(3.0, 11 / chars.length)).toFixed(2) + 'em';   // em = 1% lebar klaster
-})();
+// Intro dihapus: playIntro tetap ada sebagai fungsi kosong supaya panggilan lama dari game tidak error
+api.playIntro = function () {};
 
 /* =========================================================
    9. SUARA PERINGATAN (Web Audio, tanpa file mp3) - tidak diubah dari versi sebelumnya
@@ -782,8 +757,6 @@ state.rpmStamp = 0;                                  // nilai awal bukan data ga
 $('theme-btn').addEventListener('click', api.nextTheme);
 window.addEventListener('keydown', (e) => { if (e.key === 't' || e.key === 'T') api.nextTheme(); });
 
-api.playIntro();                                     // animasi intro saat HUD pertama kali dipakai
-
 /* =========================================================
    13. MODE BROWSER PREVIEW + PENGUJIAN  (hanya aktif dengan ?demo atau di preview Netlify)
    Tidak aktif di FiveM NUI. Pesan data asli (postMessage) otomatis menghentikan simulasi.
@@ -887,7 +860,7 @@ if (isPreview) {
 
     window.hudTest = { scenario: sim.start, stop: sim.stop, scenarios: Object.keys(SCEN) };
     const wanted = params.get('demo');
-    setTimeout(() => { if (!sim.running) sim.start(wanted && SCEN.hasOwnProperty(wanted) ? wanted : 'auto'); }, 2800);   // setelah intro
+    setTimeout(() => { if (!sim.running) sim.start(wanted && SCEN.hasOwnProperty(wanted) ? wanted : 'auto'); }, 300);
 }
 
 })();

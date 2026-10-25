@@ -7,7 +7,6 @@
     --hud-width: calc(1600px * var(--scale));       /* lebar klaster (tinggi mengikuti rasio 1600:700) */
     --offset-bottom: 50px;                          /* jarak HUD dari bawah layar */
     --offset-right: 18px;                           /* jarak HUD dari kanan layar */
-    --logo-size: 70%;                               /* ukuran logo intro (relatif terhadap cakram intro) */
 
     --warn: #ff2a2f;
     --green: #22d65a;
@@ -150,79 +149,14 @@ body.preview .hud-wrap {
 #door-lock.locked .shackle-closed { display: inline; }
 #door-lock.locked .shackle-open { display: none; }
 
-/* Boot: semua lampu menyala sebentar seperti mobil asli saat kunci kontak ON */
-.cluster.booting .lamp { color: rgba(255, 255, 255, 0.6); }
-
-/* ===================== INTRO (cakram di tengah speedometer) ===================== */
-.intro {
-    position: absolute;
-    left: 43.125%;                                  /* (810 - 120) / 1600 */
-    top: 30.714%;                                   /* (335 - 120) / 700 */
-    width: 15%;                                     /* 240 / 1600 */
-    height: 34.286%;                                /* 240 / 700 -> lingkaran */
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8em;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 40%, #1a1d22 0%, #050607 75%);
-    box-shadow: 0 0 0 0.25em rgba(255, 255, 255, 0.12);
-    opacity: 0;
-    pointer-events: none;
+/* ===================== MESIN MATI / HIDUP =====================
+   Mesin mati : seluruh klaster gelap, jarum merah gelap.
+   Mesin hidup: dial menyala terang, jarum merah terang (class .engine-on dipasang oleh setEngine). */
+.dial {
+    filter: brightness(0.28) saturate(0.85);
+    transition: filter 0.45s ease;
 }
-.intro-text {
-    display: flex;
-    gap: 0.25em;
-    font-family: var(--digital);
-    font-weight: 900;
-    font-style: italic;
-    font-size: 2.7em;
-    line-height: 1;
-    color: #fff;
-    transform: skewX(-6deg);
-}
-.intro-text span { opacity: 0; display: inline-block; }
-.intro-line {
-    display: block;
-    height: 0.18em;
-    width: 0;
-    background: var(--needle);
-    box-shadow: 0 0 0.6em var(--needle);
-}
-
-.cluster.intro-on .intro { animation: introFade 2.7s ease both; }
-.cluster.intro-on .intro-text span { animation: slamIn 0.45s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
-.cluster.intro-on .intro-line { animation: lineGrow 0.6s 1.0s ease-out forwards; }
-.cluster.intro-on .dial { animation: dialIn 0.6s ease both; }
-
-@keyframes dialIn    { from { opacity: 0; } to { opacity: 1; } }
-@keyframes introFade { 0% { opacity: 0; } 8% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes lineGrow  { to { width: 8em; } }
-@keyframes slamIn {
-    0%   { opacity: 0; transform: translateX(-4em) skewX(-25deg); filter: blur(0.4em); }
-    70%  { opacity: 1; filter: blur(0); }
-    100% { opacity: 1; transform: none; filter: none; text-shadow: 0 0 0.8em rgba(255, 255, 255, 0.5); }
-}
-
-/* ----- Logo kustom (logo.png): cakram ikut memudar lewat introFade, logo muncul dengan zoom halus ----- */
-.intro-logo {
-    display: none;
-    width: var(--logo-size);
-    height: var(--logo-size);
-    object-fit: contain;
-    filter: invert(1) contrast(1.6);                /* logo hitam -> putih */
-    mix-blend-mode: screen;
-}
-.intro.has-logo .intro-logo { display: block; }
-.intro.has-logo .intro-text,
-.intro.has-logo .intro-line { display: none; }
-.cluster.intro-on .intro.has-logo .intro-logo { animation: logoIn 1.1s ease-out both; }
-@keyframes logoIn {
-    0%   { opacity: 0; transform: scale(0.82); filter: invert(1) contrast(1.6) blur(6px); }
-    100% { opacity: 1; transform: none;        filter: invert(1) contrast(1.6) blur(0); }
-}
+.cluster.engine-on .dial { filter: none; }
 
 /* ===================== TEMA JARUM (klik tombol / tekan T) ===================== */
 :root, body[data-theme="lfa"] { --needle: #e3151c; --zone: #c4161c; }

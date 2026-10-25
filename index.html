@@ -18,19 +18,10 @@
   <button class="theme-btn" id="theme-btn" type="button" title="Ganti tema jarum (T)"><i></i><span id="theme-name">Merah Klasik</span></button>
 
   <div class="hud-wrap">
-    <div class="cluster booting" id="hud">
+    <div class="cluster" id="hud">
 
       <!-- Bezel, skala, angka, jarum, odometer & lampu digambar oleh script.js (satu sistem koordinat viewBox 1600x700) -->
       <svg id="dial" class="dial" viewBox="0 0 1600 700" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
-
-      <!-- ===== INTRO (tampil sekali saat HUD pertama dipakai) ===== -->
-      <div class="intro" id="intro">
-        <!-- Logo sendiri: taruh file "logo.png" di folder yang sama. Kalau file ada, otomatis dipakai
-             dan tulisan bawaan di bawah disembunyikan. -->
-        <img class="intro-logo" src="logo.png" alt="" onload="document.getElementById('intro').classList.add('has-logo')" onerror="this.remove()">
-        <div class="intro-text" id="intro-text" data-text="OBEY">OBEY</div>
-        <i class="intro-line"></i>
-      </div>
 
     </div>
   </div>
