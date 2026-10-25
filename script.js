@@ -455,7 +455,10 @@ function frame(now) {
    7. LAMPU & ODOMETER (render)
    ========================================================= */
 function lampClass(extra) { return 'icon-item lamp' + (extra ? ' ' + extra : ''); }
+// Jarum terang hanya saat mesin hidup DAN lampu depan nyala (low / high beam)
+function syncNeedleLight() { elHudToggle('lights-on', state.engine && state.headlights > 0); }
 function syncLamps() {
+    syncNeedleLight();
     setClass($('headlight'), lampClass(state.headlights === 2 ? 'high-beam' : state.headlights === 1 ? 'active' : ''));
     setClass($('seatbelts'), lampClass(state.belted ? 'active' : 'warn'));
     setClass($('door-lock'), lampClass(state.locked ? 'locked' : ''));
@@ -580,7 +583,8 @@ api.setOdometer = function (distance) {
 api.setEngine = function (on) {
     state.engine = isTrueValue(on);
     if (state.engine) state.engineSeenOn = true;
-    elHudToggle('engine-on', state.engine);          // mesin hidup = dial & jarum terang, mati = gelap
+    elHudToggle('engine-on', state.engine);          // mesin hidup = muka dial terang, mati = gelap
+    syncNeedleLight();                               // jarum terang hanya kalau lampu depan juga nyala
     kick();
 };
 
@@ -692,19 +696,10 @@ setInterval(() => {                                  // pengecek alarm (bukan an
 }, 250);
 
 /* =========================================================
-   10. TEMA JARUM
+   10. TEMA JARUM  (dihapus: semua jarum oranye; fungsi kosong dipertahankan supaya pesan lama tidak error)
    ========================================================= */
-const THEMES = [['lfa', 'Merah Klasik'], ['night', 'Oranye'], ['ice', 'Biru Es'], ['amber', 'Amber'], ['mono', 'Hijau']];
-let themeIdx = 0;
-api.setTheme = function (name) {
-    let i = typeof name === 'number' ? name : THEMES.findIndex((t) => t[0] === name);
-    if (i < 0) i = 0;
-    themeIdx = ((i % THEMES.length) + THEMES.length) % THEMES.length;
-    document.body.dataset.theme = THEMES[themeIdx][0];
-    setText($('theme-name'), THEMES[themeIdx][1]);
-    try { localStorage.setItem('hudTheme', THEMES[themeIdx][0]); } catch (e) { /* abaikan */ }
-};
-api.nextTheme = () => api.setTheme(themeIdx + 1);
+api.setTheme = function () {};
+api.nextTheme = function () {};
 
 /* =========================================================
    11. PESAN NUI  (satu listener; payload sama dengan versi sebelumnya + aksi baru)
@@ -772,15 +767,6 @@ api.setEngine(false);
 api.updateLockStatus(false);
 api.setOdometer(0);
 state.rpmStamp = 0;                                  // nilai awal bukan data game -> jangan dihitung basi
-(function () {
-    const q = new URLSearchParams(location.search);
-    if (q.has('button')) document.body.classList.add('show-btn');
-    let saved = q.get('theme');
-    try { saved = saved || localStorage.getItem('hudTheme'); } catch (e) { /* abaikan */ }
-    api.setTheme(saved || 'lfa');
-})();
-$('theme-btn').addEventListener('click', api.nextTheme);
-window.addEventListener('keydown', (e) => { if (e.key === 't' || e.key === 'T') api.nextTheme(); });
 
 /* =========================================================
    13. MODE BROWSER PREVIEW + PENGUJIAN  (hanya aktif dengan ?demo atau di preview Netlify)

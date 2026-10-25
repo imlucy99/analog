@@ -24,7 +24,8 @@
     --face-b: #d2ccbe;
     --ink: #111214;
     --zone: #c4161c;
-    --needle: #e3151c;
+    --needle: #ff7a1a;                              /* oranye terang: jarum saat lampu depan nyala */
+    --needle-dark: #8c3f08;                         /* oranye gelap: jarum saat lampu mati */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -103,7 +104,6 @@ body.preview .hud-wrap {
 .dial .sep-hi { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.5; }
 
 /* ----- Jarum (diputar lewat atribut transform oleh JS; sudah di-smooth per frame, tanpa CSS transition) ----- */
-.dial .ndl-body   { fill: var(--needle); }
 .dial .ndl-shadow { fill: rgba(0, 0, 0, 0.22); }
 .dial .ndl-tail   { fill: #0b0b0c; }
 
@@ -167,16 +167,15 @@ body.preview .hud-wrap {
 }
 .cluster.engine-on .face-dim { opacity: 0; }
 
-/* Jarum: redup saat mati, terang saat hidup */
+/* Jarum oranye: gelap saat lampu mati (mesin mati / mesin nyala tapi lampu mati), terang + glow tipis saat lampu depan nyala */
 .dial .ndl-body {
-    fill-opacity: 0.4;                              /* tingkat redup jarum saat mati (0 - 1) */
-    transition: fill-opacity 0.45s ease;
+    fill: var(--needle-dark);
+    transition: fill 0.45s ease;
 }
-.cluster.engine-on .dial .ndl-body { fill-opacity: 1; }
-
-/* Jarum RPM: oranye (gelap saat mati, terang + glow saat hidup) */
-.dial #needle-rpm .ndl-body { fill: #ff7a1a; }
-.cluster.engine-on .dial #needle-rpm .ndl-body { filter: drop-shadow(0 0 5px rgba(255, 122, 26, 0.9)); }
+.cluster.lights-on .dial .ndl-body {
+    fill: var(--needle);
+    filter: drop-shadow(0 0 5px rgba(255, 122, 26, 0.9));
+}
 
 /* ODO & lampu ikut redup saat mesin mati */
 .dial .odo-dig, .dial .odo-last { transition: opacity 0.45s ease; }
@@ -184,31 +183,6 @@ body.preview .hud-wrap {
 .cluster:not(.engine-on) .dial .odo-last { opacity: 0.35; }
 .lamp { transition: color 0.15s ease, filter 0.15s ease, opacity 0.45s ease; }
 .cluster:not(.engine-on) .lamp { opacity: 0.3; }
-
-/* ===================== TEMA JARUM (klik tombol / tekan T) ===================== */
-:root, body[data-theme="lfa"] { --needle: #e3151c; --zone: #c4161c; }
-body[data-theme="night"]      { --needle: #ff6a1f; --zone: #c4161c; }
-body[data-theme="ice"]        { --needle: #17b8ff; --zone: #c4161c; }
-body[data-theme="amber"]      { --needle: #ffb020; --zone: #c4161c; }
-body[data-theme="mono"]       { --needle: #22d65a; --zone: #c4161c; }
-
-.theme-btn {
-    position: fixed; top: 8px; right: 8px; z-index: 10;
-    display: none; align-items: center; gap: 6px;
-    padding: 4px 9px; border-radius: 999px; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(10, 11, 13, 0.55); color: rgba(255, 255, 255, 0.75);
-    font: 700 10px/1 var(--ui); letter-spacing: 1.5px; text-transform: uppercase;
-    opacity: 0.7; transition: opacity 0.2s, border-color 0.2s, transform 0.1s;
-}
-body.preview .theme-btn, body.show-btn .theme-btn { display: flex; }
-.theme-btn i { width: 8px; height: 8px; border-radius: 50%; background: var(--needle); box-shadow: 0 0 6px var(--needle); }
-.theme-btn:hover { opacity: 1; border-color: var(--needle); }
-.theme-btn:active { transform: scale(0.95); }
-
-/* Fade warna jarum saat ganti tema */
-@property --needle { syntax: '<color>'; inherits: true; initial-value: #e3151c; }
-body { transition: --needle 0.7s ease; }
 
 /* ===================== PANEL PENGUJIAN (hanya di preview browser) ===================== */
 .test-panel {
