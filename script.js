@@ -153,7 +153,9 @@ function bezel(c) {
     <circle cx="${cx}" cy="${cy}" r="${rf}" fill="url(#face)"/>
     <circle cx="${cx}" cy="${cy}" r="${rf}" fill="url(#faceShade)"/>`;
 }
-const gloss = (c) => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.rf}" fill="url(#gloss)" pointer-events="none"/>`;
+// gloss + lapisan gelap muka dial (hanya bagian dalam dial yang menggelap saat mesin mati; bezel & bodi tetap)
+const gloss = (c) => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.rf}" fill="url(#gloss)" pointer-events="none"/>
+    <circle class="face-dim" cx="${c.cx}" cy="${c.cy}" r="${c.rf}" pointer-events="none"/>`;
 
 function hub(cx, cy, r) {
     return `<circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="rgba(0,0,0,0.35)"/>

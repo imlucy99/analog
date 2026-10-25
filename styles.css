@@ -158,13 +158,32 @@ body.preview .hud-wrap {
 #door-lock.locked .shackle-open { display: none; }
 
 /* ===================== MESIN MATI / HIDUP =====================
-   Mesin mati : seluruh klaster gelap, jarum merah gelap.
-   Mesin hidup: dial menyala terang, jarum merah terang (class .engine-on dipasang oleh setEngine). */
-.dial {
-    filter: brightness(0.28) saturate(0.85);
-    transition: filter 0.45s ease;
+   Mesin mati : hanya muka dial yang gelap (bezel krom & bodi hitam tetap), jarum redup, lampu & ODO redup.
+   Mesin hidup: muka dial terang, jarum menyala (class .engine-on dipasang oleh setEngine). */
+.dial .face-dim {
+    fill: #04050a;
+    opacity: 0.8;                                   /* tingkat gelap muka dial saat mesin mati (0 - 1) */
+    transition: opacity 0.45s ease;
 }
-.cluster.engine-on .dial { filter: none; }
+.cluster.engine-on .face-dim { opacity: 0; }
+
+/* Jarum: redup saat mati, terang saat hidup */
+.dial .ndl-body {
+    fill-opacity: 0.4;                              /* tingkat redup jarum saat mati (0 - 1) */
+    transition: fill-opacity 0.45s ease;
+}
+.cluster.engine-on .dial .ndl-body { fill-opacity: 1; }
+
+/* Jarum RPM: oranye (gelap saat mati, terang + glow saat hidup) */
+.dial #needle-rpm .ndl-body { fill: #ff7a1a; }
+.cluster.engine-on .dial #needle-rpm .ndl-body { filter: drop-shadow(0 0 5px rgba(255, 122, 26, 0.9)); }
+
+/* ODO & lampu ikut redup saat mesin mati */
+.dial .odo-dig, .dial .odo-last { transition: opacity 0.45s ease; }
+.cluster:not(.engine-on) .dial .odo-dig,
+.cluster:not(.engine-on) .dial .odo-last { opacity: 0.35; }
+.lamp { transition: color 0.15s ease, filter 0.15s ease, opacity 0.45s ease; }
+.cluster:not(.engine-on) .lamp { opacity: 0.3; }
 
 /* ===================== TEMA JARUM (klik tombol / tekan T) ===================== */
 :root, body[data-theme="lfa"] { --needle: #e3151c; --zone: #c4161c; }
