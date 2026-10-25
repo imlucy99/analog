@@ -40,7 +40,7 @@ const DEFAULTS = {
     limiterReleaseTime: 0.20,     // detik RPM harus di bawah release threshold sebelum getaran berhenti
     limiterAttackTime: 0.04,      // detik getaran naik sampai penuh
     limiterRecoverTime: 0.15,     // detik getaran memudar sampai nol setelah limiter lepas
-    limiterShakeAmplitude: 2.0,   // amplitudo maksimum getaran (derajat jarum)
+    limiterShakeAmplitude: 3.5,   // amplitudo getaran (derajat jarum); jarum bergetar dari titik limiter turun sejauh 2x nilai ini
     limiterShakeFrequency: 24,    // frekuensi dasar getaran (Hz)
 
     // ----- Speedometer
@@ -278,7 +278,11 @@ function buildCluster() {
     <!-- ===== ODOMETER ===== -->
     <rect class="odo-box" x="${S.cx - 92}" y="${S.cy + 119}" width="184" height="46" rx="7"/>`;
     for (let i = 1; i < 6; i++) s += `<line class="odo-sep" x1="${S.cx - 90 + i * 30.5}" y1="${S.cy + 122}" x2="${S.cx - 90 + i * 30.5}" y2="${S.cy + 162}"/>`;
-    for (let i = 0; i < 6; i++) s += `<text class="odo-dig" id="odo-${i}" x="${S.cx - 74.75 + i * 30.5}" y="${S.cy + 143}">0</text>`;
+    // roda paling kanan (persepuluh mil) berlatar putih seperti odometer analog asli
+    s += `<rect class="odo-last" x="${S.cx - 90 + 5 * 30.5 + 1}" y="${S.cy + 122}" width="27.5" height="40" rx="3"/>`;
+    s += `<clipPath id="odoClip"><rect x="${S.cx - 90}" y="${S.cy + 122}" width="180" height="40"/></clipPath><g id="odo-cells" clip-path="url(#odoClip)">`;
+    for (let i = 0; i < 6; i++) s += `<text class="odo-dig${i === 5 ? ' odo-dig-last' : ''}" id="odo-${i}" x="${S.cx - 74.75 + i * 30.5}" y="${S.cy + 143}">0</text>`;
+    s += '</g>';
 
     // ===== JARUM (di atas semua skala) =====
     s += needleSvg(N.rpm.id, N.rpm.cx, N.rpm.cy, N.rpm.len, N.rpm.tail, N.rpm.tailW, N.rpm.baseW, rpmA0) + hub(N.rpm.cx, N.rpm.cy, N.rpm.hub);
@@ -349,13 +353,13 @@ function updateLimiter(dt, ratio) {
 }
 // Offset getaran (derajat) untuk waktu t (detik). Dihitung ulang tiap frame dari t, TIDAK diakumulasi.
 // Tiga gelombang berfrekuensi tidak sebanding + modulasi amplitudo lambat -> getaran terasa mekanis, tidak monoton.
-// Nilai mutlak selalu <= limiterShakeAmplitude * env.
+// Getaran selalu ke arah TURUN dari titik limiter (0 s/d -2 x amplitudo), karena jarum sudah di ujung skala dan tidak bisa naik lagi.
 function limiterShakeOffset(t, env) {
     if (env <= 0.0005) return 0;
     const w = 2 * Math.PI, f = CFG.limiterShakeFrequency;
     const s = 0.55 * Math.sin(w * f * t) + 0.30 * Math.sin(w * f * 1.61 * t + 1.3) + 0.15 * Math.sin(w * f * 2.37 * t + 2.1);
     const m = 0.8 + 0.2 * Math.sin(w * 3.1 * t + 0.7);
-    return CFG.limiterShakeAmplitude * env * s * m;
+    return CFG.limiterShakeAmplitude * env * (s * m - 1);
 }
 
 const hudFlags = {};
@@ -457,11 +461,30 @@ function syncLamps() {
     setClass($('check-engine'), lampClass(ce ? 'engine-warn' : ''));
     elHudToggle('engine-warn', ce);
 }
+// Satu digit berganti: angka lama naik keluar, angka baru naik masuk dari bawah (efek roda berputar)
+function rollDigit(el, nv) {
+    const old = el.cloneNode(true);
+    old.removeAttribute('id');
+    old.classList.remove('odo-in');
+    old.classList.add('odo-out');
+    el.parentNode.appendChild(old);
+    setTimeout(() => old.remove(), 450);
+    el.textContent = nv;
+    el.classList.remove('odo-in');
+    void el.getBoundingClientRect();                 // restart animasi
+    el.classList.add('odo-in');
+}
 function renderOdometer() {
-    const s = String(Math.floor(Math.max(0, state.odo)) % 1000000).padStart(6, '0');
+    // 6 roda: 5 digit mil + 1 digit persepuluh mil (roda putih paling kanan)
+    const s = String(Math.floor(Math.max(0, state.odo) * 10) % 1000000).padStart(6, '0');
     if (s === odo.last) return;
+    const first = odo.last === '';
+    for (let i = 0; i < 6; i++) {
+        const el = odo.cells[i];
+        if (el === NOOP_EL || el.textContent === s[i]) continue;
+        if (first) setText(el, s[i]); else rollDigit(el, s[i]);
+    }
     odo.last = s;
-    for (let i = 0; i < 6; i++) setText(odo.cells[i], s[i]);
 }
 
 /* =========================================================

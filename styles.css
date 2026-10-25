@@ -111,13 +111,21 @@ body.preview .hud-wrap {
 .dial .odo-box  { fill: #0d0e10; stroke: #3b3d42; stroke-width: 2.5; }
 .dial .odo-sep  { stroke: rgba(255, 255, 255, 0.18); stroke-width: 1.5; }
 .dial .odo-dig  {
-    font-family: var(--digital);
-    font-weight: 700;
-    font-size: 27px;
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;   /* font biasa */
+    font-weight: 600;
+    font-size: 28px;
     fill: #f5f5f5;
     text-anchor: middle;
     dominant-baseline: central;
 }
+/* roda paling kanan: latar putih, angka gelap */
+.dial .odo-last { fill: #f2f3f5; }
+.dial .odo-dig-last { fill: #0d0e10; }
+/* animasi roda berputar saat angka berganti */
+.dial .odo-in  { animation: odoIn 0.4s ease-out both; }
+.dial .odo-out { animation: odoOut 0.4s ease-in both; }
+@keyframes odoIn  { from { transform: translateY(32px); } to { transform: translateY(0); } }
+@keyframes odoOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-32px); opacity: 0; } }
 
 /* ----- Ikon bahan bakar & peringatan pada label ----- */
 .dial .fuel-icon { color: var(--ink); }
